@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcdisambiguation.dataMapper.acm.ACMSearchMapper">
+    <resultMap id="Paper" type="com.nju.svcdisambiguation.po.acm.ACMPaperPO">
+        <id column="document_id" property="document_id"/>
+        <result column="title" property="title"/>
+        <result column="abs" property="abs"/>
+        <result column="year" property="year"/>
+        <result column="publication" property="publication"/>
+    </resultMap>
+
+    <select id="selectACMPaperPOByAuthorName" resultMap="Paper">
+        select document_id, title, abstract as abs, publication, year from document
+        where (year between #{startTime} and #{endTime}) and publication != '' and document_id in
+        (select paperId from authorize where authorID in
+        (select author_id from author where name like #{authorName}))
+    </select>
+
+    <select id="selectCitationsCountByDocId" resultType="java.lang.Integer">
+        select count(*) from ref where referredId = #{document_id}
+    </select>
+
+    <resultMap id="Author" type="com.nju.svcdisambiguation.vo.search.AuthorSearchResultVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="affiliation" property="institution"/>
+        <result column="db" property="db"/>
+    </resultMap>
+
+    <select id="selectACMAuthorPOByDocId" resultMap="Author">
+        select author_id as id, name, affiliation, 'ACM' as db from author where author_id in
+        (select authorID from authorize where paperID = #{document_id})
+    </select>
+
+    <select id="selectKeywordsByDocId" resultType="java.lang.String">
+        select group_concat(name) from keywords where keywords_id in
+        (select fieldId from paperfield where paperId = #{document_id})
+    </select>
+
+    <select id="selectACMPaperPOByInstitutionName" resultMap="Paper">
+        select document_id, title, abstract as abs, publication, year from document
+        where (year between #{startTime} and #{endTime}) and document_id in
+        (select distinct paperID from authorize where authorID in
+        (select authorID from authoraffiliation where affiliationNAME like #{institution}))
+    </select>
+
+    <select id="selectPaperVOByAuthorName" resultType="com.nju.svcdisambiguation.vo.PaperVO">
+        select document_id as docId, 'ACM' as db, title, abstract as abs, publication, year, citations, keywords from document
+        where (year between #{startTime} and #{endTime}) and document_id in(
+        select distinct paperID from authorize where authorID in(
+            select author_id from author where alias in(
+                select distinct alias from author where name like #{authorName} and alias is not null) union
+            select author_id from author where name like #{authorName}
+            )
+        )
+    </select>
+
+    <select id="selectPaperVOByInsName" resultType="com.nju.svcdisambiguation.vo.PaperVO">
+        select document_id as docId, 'ACM' as db, title, abstract as abs, publication, year, citations, keywords from document
+        where (year between #{startTime} and #{endTime}) and document_id in(
+            select distinct paperID from authorize where authorID in
+            (select author_id from author where affiliation like #{insName})
+        )
+    </select>
+
+    <select id="selectAuthorsByDocId" resultType="com.nju.svcdisambiguation.vo.AuthorVO">
+        select author_id as id, name, 'ACM' as db, affiliation as institution from author where author_id in(
+        select authorID from authorize where paperID = #{id})
+    </select>
+
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcdisambiguation.dataMapper.ieee.IEEEDisambiguationMapper">
+
+    <select id="selectAuthorNameById" resultType="java.lang.String">
+        select name from authors where id = #{id};
+    </select>
+
+    <update id="setAuthorAlias">
+        update authors set alias = #{alias} where id = #{id}
+    </update>
+
+    <select id="selectInsNameById" resultType="java.lang.String">
+        select affiliation_name from affiliation where affiliationID = #{id}
+    </select>
+
+    <update id="setInsAlias">
+        update affiliation set alias = #{alias} where affiliationID = #{id}
+    </update>
+
+    <select id="getMaxAuthorAlias" resultType="java.lang.Integer">
+        select if(MAX(alias), MAX(alias), 0) alias from authors
+    </select>
+
+    <select id="getMaxInsAlias" resultType="java.lang.Integer">
+        select if(MAX(alias), MAX(alias), 0) alias from affiliation
+    </select>
+
+    <select id="selectAuthorAliasById" resultType="java.lang.Integer">
+        select if(alias, alias, 0) from authors where id = #{id}
+    </select>
+
+    <select id="selectInsAliasById" resultType="java.lang.Integer">
+        select if(alias, alias, 0) from affiliation where affiliationID = #{id}
+    </select>
+
+    <select id="selectAuthorIds" resultType="java.lang.Integer">
+        select id from authors where name like #{regx} and affiliation != '' and length = #{length}
+    </select>
+
+    <select id="selectAuthorCalLengthPO" resultType="com.nju.svcdisambiguation.po.CalLengthPO">
+        select id, name, length from authors where affiliation != ''
+    </select>
+
+    <update id="updateAuthorLength">
+        update authors set length = #{length} where id = #{id}
+    </update>
+
+    <select id="selectInsCalLengthPO" resultType="com.nju.svcdisambiguation.po.CalLengthPO">
+        select affiliationID as id, affiliation_name as name, length from affiliation
+    </select>
+
+    <update id="updateInsLength">
+        update affiliation set length = #{length} where affiliationID = #{id}
+    </update>
+
+    <select id="selectInsIds" resultType="java.lang.Integer">
+        select affiliation_id from affiliation where affiliation_name like #{regx} and length = #{length}
+    </select>
+
+</mapper>

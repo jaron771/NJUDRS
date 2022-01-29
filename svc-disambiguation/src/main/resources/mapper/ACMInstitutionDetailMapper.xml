@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcdisambiguation.dataMapper.acm.ACMInstitutionDetailMapper">
+
+    <resultMap id="InstitutionDetail" type="com.nju.svcdisambiguation.vo.detail.institution.InstitutionInfoVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <select id="selectInstitutionDetailById" resultMap="InstitutionDetail">
+        select affiliation_id as id, affiliation_name as name from affiliation where affiliation_id = #{institutionId}
+    </select>
+
+    <resultMap id="InstitutionAuthorStat" type="com.nju.svcdisambiguation.vo.detail.institution.InstitutionAuthorStatVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <select id="selectAuthorByInstitution" resultType="java.lang.Integer">
+        select authorID as id from authoraffiliation where affiliationNAME=#{institution}
+    </select>
+
+    <select id="selectSameInsByInstitutionId" resultType="java.lang.String">
+        select affiliation_name from affiliation where alias != '' and alias in
+        (select alias from affiliation where affiliation_id = #{institutionId})
+    </select>
+
+
+
+    <select id="selectInstitutionAuthor" resultType="java.lang.Integer">
+        select authorID from authoraffiliation where affiliationNAME=#{institution}
+    </select>
+
+    <select id="selectInstitutionName" resultType="java.lang.String">
+        select affiliation_name from affiliation where affiliation_id=#{institutionId}
+    </select>
+
+
+    <select id="selectAuthorName" resultType="java.lang.String">
+        select name from author where author_id=#{authorId}
+    </select>
+
+    <select id="selectFieldByPaper" resultType="java.lang.Integer">
+        select fieldId from paperfield where paperId=#{paperId}
+    </select>
+
+    <select id="selectPaperByAuthor" resultType="java.lang.Integer">
+        select paperID from authorize where authorID=#{authorId}
+    </select>
+
+    <resultMap id="FieldSummary" type="com.nju.svcdisambiguation.po.FieldSummaryPO">
+        <id column="fieldId" property="fieldId"/>
+        <result column="fieldName" property="fieldName"/>
+        <result column="count" property="count"/>
+    </resultMap>
+
+    <select id="selectFieldSummaryPOByInstitutionNAME" resultMap="FieldSummary">
+        select keywords_id as fieldId, name as fieldName, count(*) as count from keywords where keywords_id in
+        (select fieldId from paperfield where paperId in
+        (select paperID from authorize where authorID in
+        ( select authorID from authoraffiliation where affiliationNAME= #{institution})))
+        group by keywords_id, name
+    </select>
+
+    <select id="selectSameAuthorIds" resultType="java.lang.Integer">
+        select author_id from author where alias is not null and author_id in(
+        select distinct authorID from authoraffiliation where affiliationNAME in(
+        select affiliation_name from affiliation where affiliation_id = #{id}))
+    </select>
+
+    <select id="selectSameAuthorPO" resultType="com.nju.svcdisambiguation.po.SameAuthorPO">
+        select author_id as id, name, 'ACM' as db from author where alias in(
+        select alias from author where author_id = #{id})
+    </select>
+
+</mapper>

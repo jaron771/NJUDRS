@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcdisambiguation.dataMapper.acm.ACMPaperInfoMapper">
+
+    <resultMap id="PaperInstitution" type="com.nju.svcdisambiguation.po.PaperInstitutionsPO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="db" property="db"/>
+    </resultMap>
+
+    <select id="searchInstitutionsByPaperId" resultMap="PaperInstitution">
+        select affiliation_id as id, affiliation_name as name, 'ACM' as db from affiliation where affiliation_name in
+        (select distinct affiliationNAME from authoraffiliation where authorID in
+        (select authorID from authorize where paperID = #{paperId}))
+    </select>
+
+    <select id="searchPdfLinkByPaperId" resultType="java.lang.String">
+        select source_url from document where document_id = #{paperId}
+    </select>
+
+    <select id="searchAbsByPaperId" resultType="java.lang.String">
+        select abstract from document where document_id = #{paperId}
+    </select>
+
+    <resultMap id="ReferenceVO" type="com.nju.svcdisambiguation.vo.detail.ReferenceVO">
+        <result column="id" property="id"/>
+        <result column="db" property="db"/>
+        <result column="title" property="title"/>
+        <result column="publication" property="publication"/>
+        <result column="year" property="year"/>
+    </resultMap>
+
+    <select id="selectReferenceVOByPaperId" resultMap="ReferenceVO">
+        select document_id as id, 'ACM' as db, title, publication, year from document,
+        (select referredId from ref where refererId = #{id}) tmp
+        where document_id = tmp.referredId
+        limit #{begin},#{pageSize}
+    </select>
+
+    <select id="selectReferenceVONumByAuthorId" resultType="java.lang.Integer">
+        select count(*) from ref where refererId = #{id}
+    </select>
+
+    <select id="selectAuthorsByPaperId" resultType="java.lang.String">
+        select name from author where author_id in
+        (select authorID from authorize where paperID = #{id})
+    </select>
+
+    <select id="selectKeywordsByPaperId" resultType="java.lang.String">
+        select name from keywords where keywords_id in
+        (select fieldId from paperfield where paperId = #{id})
+    </select>
+
+    <select id="selectBasicInfoByDocId" resultType="com.nju.svcdisambiguation.vo.detail.paper.PaperInfoVO">
+        select document_id as docId, 'ACM' as db, title, abstract as abs, publication, year, citations, keywords from document
+        where document_id = #{id}
+    </select>
+
+    <select id="selectAuthorsByDocId" resultType="com.nju.svcdisambiguation.vo.AuthorVO">
+        select author_id as id, name, 'ACM' as db, affiliation as institution from author where author_id in(
+        select authorID from authorize where paperID = #{id})
+    </select>
+
+</mapper>

@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    ieee:
+      driver-class-name: "com.mysql.jdbc.Driver"
+      jdbc-url: "jdbc:mysql://172.19.241.98:3306/ieeedb?serverTimezone=UTC"
+      #jdbc-url: "jdbc:mysql://ieeedb:3306/ieeedb?serverTimezone=UTC"
+      username: "root"
+      password: "root"
+    acm:
+      driver-class-name: "com.mysql.jdbc.Driver"
+      jdbc-url: "jdbc:mysql://172.19.241.98:3308/acmdb?serverTimezone=UTC"
+      #jdbc-url: "jdbc:mysql://acmdb:3306/acmdb?serverTimezone=UTC"
+      username: "root"
+      password: "root"

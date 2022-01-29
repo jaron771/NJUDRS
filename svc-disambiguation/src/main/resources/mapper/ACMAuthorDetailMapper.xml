@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcdisambiguation.dataMapper.acm.ACMAuthorDetailMapper">
+
+    <resultMap id="AuthorPublicationSummary" type="com.nju.svcdisambiguation.vo.detail.author.AuthorPublicationSummaryVO">
+        <result column="publication" property="publication"/>
+        <result column="docCount" property="docCount"/>
+    </resultMap>
+
+    <select id="selectAuthorPublicationSummaryByAuthorId" resultMap="AuthorPublicationSummary">
+        select publication, count(*) as docCount from document
+        where publication != '' and document_id in
+        (select paperID from authorize where authorID = #{authorId})
+        group by publication
+    </select>
+
+    <resultMap id="FieldSummary" type="com.nju.svcdisambiguation.po.FieldSummaryPO">
+        <id column="fieldId" property="fieldId"/>
+        <result column="fieldName" property="fieldName"/>
+        <result column="count" property="count"/>
+    </resultMap>
+
+    <select id="selectFieldSummaryPOByAuthorId" resultMap="FieldSummary">
+        select keywords_id as fieldId, name as fieldName, count(*) as count from keywords where keywords_id in
+        (select fieldId from paperfield where paperId in
+        (select paperID from authorize where authorID = #{authorId}))
+        group by keywords_id, name
+    </select>
+
+    <resultMap id="Institution" type="com.nju.svcdisambiguation.vo.detail.author.InstitutionAuthorDetailVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <select id="selectInstitutionByAuthorId" resultMap="Institution">
+        select affiliation_id as id, affiliation_name as name from affiliation
+        where affiliation_name in
+        (select affiliationNAME from authoraffiliation where authorID = #{authorId})
+    </select>
+
+    <resultMap id="AuthorDetail" type="com.nju.svcdisambiguation.vo.detail.author.AuthorDetailVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <select id="selectAuthorDetailById" resultMap="AuthorDetail">
+        select author_id as id, name from author where author_id = #{authorId}
+    </select>
+
+    <resultMap id="PaperActivation" type="com.nju.svcdisambiguation.po.PaperActivationPO">
+        <id column="docId" property="docId"/>
+        <result column="citations" property="citations"/>
+        <result column="year" property="year"/>
+    </resultMap>
+
+    <select id="selectPaperActivationPOByAuthorId" resultMap="PaperActivation">
+        select document_id as docId, year, count(*) as citations from (select document_id, year from document where document_id in
+        (select paperID from authorize where authorID = #{authorId})) doc join ref
+        on ref.referredId = doc.document_id
+        group by document_id, year
+    </select>
+
+    <select id="selectSameAuthorsByAuthorId" resultType="java.lang.String">
+        select name from author where alias != '' and alias in
+        (select alias from author where author_id = #{authorId})
+    </select>
+
+    <select id="selectDocCountByAuthorId" resultType="java.lang.Integer">
+        select count(*) from authorize where authorID = #{authorId}
+    </select>
+
+    <resultMap id="KeywordsAuthorDetail" type="com.nju.svcdisambiguation.vo.detail.author.KeywordsAuthorDetailVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="docCount" property="docCount"/>
+    </resultMap>
+
+    <select id="selectKeywordsAuthorDetailByAuthorId" resultMap="KeywordsAuthorDetail">
+        select keywords_id as id, name, count(*) as docCount from keywords,
+        (select fieldId, paperId from paperfield where paperId in
+        (select paperID from authorize where authorID = #{authorId})) temp1
+        where keywords_id = fieldId
+        group by keywords_id, name
+    </select>
+
+    <select id="selectPAVOByFieldNameAndAuthorId" resultMap="PaperActivation">
+        select document_id as docId, year, count(*) as citations from
+        (select document_id, year from document where document_id in
+        (select paperId from paperfield
+        where fieldId in (select keywords_id from keywords where name = #{fieldName})
+        and paperId in (select paperID from authorize where authorID = #{authorId}))) temp
+        left join ref
+        on temp.document_id = ref.referredId
+        group by document_id, year
+    </select>
+
+    <resultMap id="ReferenceVO" type="com.nju.svcdisambiguation.vo.detail.ReferenceVO">
+        <result column="id" property="id"/>
+        <result column="db" property="db"/>
+        <result column="title" property="title"/>
+        <result column="publication" property="publication"/>
+        <result column="year" property="year"/>
+    </resultMap>
+
+    <select id="selectReferenceVOByAuthorId" resultMap="ReferenceVO">
+        select document_id as id, 'ACM' as db, title, publication, year from document,
+        (select referredId from ref where refererId in
+        (select paperID from authorize where authorID = #{id})) tmp
+        where document_id = tmp.referredId
+        limit #{begin},#{pageSize}
+    </select>
+
+    <select id="selectReferenceVONumByAuthorId" resultType="java.lang.Integer">
+        select count(*) from document,
+        (select referredId from ref where refererId in
+        (select paperID from authorize where authorID = #{id})) tmp
+        where document_id = tmp.referredId
+    </select>
+
+    <select id="selectAuthorsByPaperId" resultType="java.lang.String">
+        select name from author where author_id in
+        (select authorID from authorize where paperID = #{id})
+    </select>
+
+    <select id="selectKeywordsByPaperId" resultType="java.lang.String">
+        select name from keywords where keywords_id in
+        (select fieldId from paperfield where paperId = #{id})
+    </select>
+
+    <select id="selectAuthorReferred" resultType="java.lang.Integer">
+        select count(*) from ref where referredId in
+        (select paperID from authorize where authorID = #{id})
+    </select>
+
+    <select id="selectDocCnt" resultType="java.lang.Integer">
+        select count(*) from authorize where authorID = #{id}
+    </select>
+
+    <select id="selectAuthorInstitutions" resultType="com.nju.svcdisambiguation.po.AuthorInstitutionsPO">
+        select time, group_concat(institution) as institution from
+            (select distinct year as time from document
+             where year is not null and document_id in(
+                 select paperID from authorize where authorID in (
+                     select author_id from author where alias in(
+                         select alias from author where author_id = #{id})
+                     )
+                 )
+             ) time,
+                (select affiliation_id as id, affiliation_name as institution, 'ACM' as db from affiliation
+                 where affiliation_name in(
+                    select affiliationNAME from authoraffiliation where authorID in (
+                        select author_id from author where alias in(
+                            select alias from author where author_id = #{id})
+                    )
+                 )
+                ) institution
+                group by time
+                order by time
+    </select>
+
+    <select id="selectPaperVOByAuthorId" resultType="com.nju.svcdisambiguation.vo.PaperVO">
+        select document_id as docId, 'ACM' as db, title, abstract as abs, publication, year, citations, keywords from document where document_id in(
+            select paperID
+            from authorize where authorID in(
+                select author_id from author where alias in (
+                    select alias from author where author_id = #{id}) union select #{id}
+                )
+        )
+    </select>
+
+    <select id="selectAuthorsByDocId" resultType="com.nju.svcdisambiguation.vo.AuthorVO">
+        select author_id as id, name, 'ACM' as db, affiliation as institution from author where author_id in(
+        select authorID from authorize where paperID = #{id})
+    </select>
+
+</mapper>

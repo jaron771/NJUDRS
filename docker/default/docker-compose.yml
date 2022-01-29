@@ -1,0 +1,78 @@
+version: '2'
+services:
+  eurekaserver:
+    image: oasisplus/svc-discovery:latest
+    ports:
+      - "8761:8761"
+      
+  configserver:
+    image: oasisplus/cfg-service:latest
+    ports:
+      - "8088:8088"
+    environment:
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      EUREKASERVER_PORT: "8761"
+
+#  ieeedb:
+#    image: mysql:5.7
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - /home/zjr/sql:/home/sql
+#    environment:
+#      MYSQL_USER: "root"
+#      MYSQL_ROOT_PASSWORD: "root"
+#      MYSQL_DATABASE:       "ieeedb"
+
+#  acmdb:
+#    image: mysql:5.7
+#    ports:
+#      - "3308:3306"
+#    volumes:
+#      - /home/zjr/sql:/home/sql
+#    environment:
+      #      MYSQL_USER: "root"
+#      MYSQL_ROOT_PASSWORD: "root"
+#      MYSQL_DATABASE:       "acmdb"
+
+  disambiguation:
+    image: oasisplus/svc-disambiguation:latest
+    ports:
+      - "8883:8883"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "8883"
+      CONFIGSERVER_URI: "http://configserver:8088"
+      CONFIGSERVER_PORT:   "8088"
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      EUREKASERVER_PORT:   "8761"
+      DATABASESERVER_PORT1: "3306"
+      DATABASESERVER_PORT2: "3308"
+
+  prediction:
+    image: oasisplus/svc-prediction:latest
+    ports:
+      - "8884:8884"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "8884"
+      CONFIGSERVER_URI: "http://configserver:8088"
+      CONFIGSERVER_PORT:   "8088"
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      EUREKASERVER_PORT:   "8761"
+      DATABASESERVER_PORT1: "3306"
+      DATABASESERVER_PORT2: "3308"
+
+  recommend:
+    image: oasisplus/svc-recommend:latest
+    ports:
+      - "8885:8885"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "8885"
+      CONFIGSERVER_URI: "http://configserver:8088"
+      CONFIGSERVER_PORT:   "8088"
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      EUREKASERVER_PORT:   "8761"
+      DATABASESERVER_PORT1: "3306"
+      DATABASESERVER_PORT2: "3308"
