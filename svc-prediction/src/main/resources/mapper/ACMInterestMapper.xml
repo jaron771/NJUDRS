@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcprediction.dataMapper.acm.ACMInterestMapper">
+
+    <resultMap id="InterestRes" type="com.nju.svcprediction.domain.InterestRes">
+        <result column="word" property="word"/>
+        <result column="year" property="year"/>
+    </resultMap>
+
+    <select id="getInterestHistoryByAuthorId" resultMap="InterestRes">
+        select year, name as word from keywords,
+        (select fieldId, year from paperfield, document where paperId = document_id and paperId in
+        (select authorize.paperID from authorize,
+        ((select author_id from author where author_id = #{id}) union
+        (select author_id from author where alias in
+        (select alias from author where author_id = #{id}))) tmp
+        where authorID = author_id)) tmp2
+        where keywords_id = fieldId
+        group by name, year
+        order by year, count(*) desc
+    </select>
+
+    <select id="getInterestPrediction" resultType="java.lang.String">
+        select name from keywords where keywords_id in
+        (select fieldId from paperfield where paperId in
+        (select document_id from document where year = #{time} and publication in
+        (select publication from document where document_id in
+        (select paperID from authorize where authorID = #{id})))
+        group by fieldId)
+        group by name
+        order by count(*) desc
+        limit 1
+    </select>
+
+</mapper>
