@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcprediction.dataMapper.ieee.IEEECollabMapper">
+
+    <resultMap id="EdgePO" type="com.nju.svcprediction.domain.EdgePO">
+        <result column="v1" property="v1"/>
+        <result column="v2" property="v2"/>
+        <result column="commonWorks" property="commonWorks"/>
+    </resultMap>
+
+    <select id="getEdgesByAuthorId" resultMap="EdgePO">
+        select 1 as v1, authorID as v2, count(*) as commonWorks from authorize
+        where paperID in
+        (select paperID from authorize where authorID = #{id})
+        group by v1, v2;
+    </select>
+
+    <resultMap id="VeticleContent" type="com.nju.svcprediction.domain.VeticleContent">
+        <result column="affiliation" property="affiliation"/>
+        <result column="affiliationId" property="affiliationId"/>
+        <result column="documentCount" property="documentCount"/>
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="db" property="db"/>
+    </resultMap>
+
+    <select id="getVeticleContent" resultMap="VeticleContent">
+        select affiliation.affiliationID as affiliationId, tmp2.name, tmp2.authorID as id, tmp2.affiliationNAME as affiliation, tmp2.documentCount,'IEEE' as db from affiliation,
+        (select authors.name, tmp1.* from authors,
+        (select tmp.authorID, tmp.affiliationNAME, count(*) as documentCount from authorize,
+        (select authorID, affiliationNAME from authoraffiliation where authorID = #{id}) tmp
+        where authorize.authorID = tmp.authorID
+        group by tmp.authorID, tmp.affiliationNAME) tmp1
+        where id = tmp1.authorID) tmp2
+        where affiliation_name = tmp2.affiliationNAME
+        limit 1
+    </select>
+
+    <select id="getFutureCollab" resultType="java.lang.Integer">
+        select authorID from authorize where paperID in
+        (select document_id from document where document_id in
+        (select paperId from paperfield where fieldId in
+        (select id from keywords where field = #{keyword})))
+        limit 5
+    </select>
+
+    <resultMap id="CollabPredictRes" type="com.nju.svcprediction.domain.CollabPredictRes">
+        <result property="category" column="category"/>
+        <result property="affiliationName" column="authorName"/>
+        <result property="authorName" column="authorName"/>
+        <result property="id" column="id"/>
+        <result property="db" column="db"/>
+    </resultMap>
+
+    <select id="getDataById" resultMap="CollabPredictRes">
+        select id, name as authorName, affiliation as affiliationName, 2 as category, 'IEEE' as db from authors where id = #{id};
+    </select>
+
+    <select id="getAuthorName" resultType="java.lang.String">
+        select name from authors where id = #{id}
+    </select>
+
+</mapper>
