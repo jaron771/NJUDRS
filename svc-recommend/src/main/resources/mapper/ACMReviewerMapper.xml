@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcrecommend.dataMapper.acm.ACMReviewerMapper">
+
+    <select id="getPublication" resultType="java.lang.String">
+        select publication from document where publication = #{publication}
+        limit 1
+    </select>
+
+    <select id="getRecommendReviewersId" resultType="java.lang.Integer">
+        select author_id from document, paperfield, keywords, author, authorize
+        where document_id = paperfield.paperId and fieldId = keywords_id
+          and document_id = authorize.paperID and authorID = author_id
+          and publication = #{publication} and keywords.name = #{keyword}
+    </select>
+
+    <select id="getReviewerName" resultType="java.lang.String">
+        select name from author where author_id = #{id}
+    </select>
+
+    <select id="getReviewerIns" resultType="java.lang.String">
+        select affiliationNAME from authoraffiliation where authorID = #{id}
+    </select>
+
+    <select id="getReviewerKeywords" resultType="java.lang.String">
+        select keywords.name from keywords, document, paperfield, authorize
+        where document_id = paperfield.paperId and fieldId = keywords_id
+          and document_id = authorize.paperID and authorID = #{id}
+    </select>
+
+    <select id="getSameInsAuthorIDs" resultType="java.lang.Integer">
+        select distinct authorID from authoraffiliation where affiliationNAME in
+        (select affiliation from author where name = #{name})
+    </select>
+
+</mapper>

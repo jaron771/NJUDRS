@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nju.svcrecommend.dataMapper.ieee.IEEESLRMapper">
+
+
+    <select id="selectPaperVOsByKeyword" resultType="com.nju.svcrecommend.domain.PaperVO">
+        select document_id as docId, 'IEEE' as db, title, abstract as abs, keywords, publication, publish_year as year, citation_count as citations from document
+        where (publish_year between #{startTime} and #{endTime})
+        and document_id in
+        (select paperId from paperfield where fieldId in
+        (select id from keywords where field like #{keyword}))
+    </select>
+
+    <select id="selectAuthorsByDocId" resultType="com.nju.svcrecommend.domain.AuthorVO">
+        select id, name, 'IEEE' as db, affiliation as institution from authors where id in
+        (select authorID from authorize where paperID = #{id})
+    </select>
+
+</mapper>
